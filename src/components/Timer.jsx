@@ -3,38 +3,40 @@ import "./Timer.css";
 
 const STATUS = {
   pause: 0,
-  start: 1,
   default: 2,
 };
 
 function Timer() {
+  const [status, setStatus] = React.useState(STATUS.default);
+  const [minutes, setMinutes] = React.useState(0);
+  const [seconds, setSeconds] = React.useState(10);
+  const intervalRef = React.useRef();
+  const [start, setStart] = useState(false);
+
   const hoverHandler = () => {
-    clearInterval(intervalRef.current);
-    window.alert("Paused..");
+    if(start){
+      clearInterval(intervalRef.current);
+      window.alert("Paused..");
+    }else{
+      return clearInterval(intervalRef.current);
+    }
   };
+
   const outHandler = () => {
     intervalRef.current = setInterval(() => {
       countDown();
     }, 1000);
   };
 
-  const [status, setStatus] = React.useState(STATUS.default);
-  const [minutes, setMinutes] = React.useState(0);
-  const [seconds, setSeconds] = React.useState(10);
-  const [displayMessage, setDisplayMessage] = React.useState(false);
-  const intervalRef = React.useRef();
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function countDown() {
     if (seconds === 0) {
       if (minutes !== 0) {
         setSeconds(59);
         setMinutes((min) => min - 1);
       } else {
-        let mins = displayMessage ? 0 : 0;
         let sec = 0;
         setSeconds(sec);
-        setMinutes(mins);
-        setDisplayMessage((value) => !value);
       }
     } else {
       setSeconds((sec) => sec - 1);
@@ -42,25 +44,28 @@ function Timer() {
   }
 
   React.useEffect(() => {
-    if (status === STATUS.start) {
+    if (start) {
       intervalRef.current = setInterval(
         () => {
           countDown();
-        },1000
-      );
-
-    } else if (status === STATUS.pause && intervalRef.current) {
+        },1000);
+    } else if (status === STATUS.pause) {
       clearInterval(intervalRef.current);
+    }else if(intervalRef.current){
+      clearInterval(intervalRef.current);
+      setMinutes(0);
+      setSeconds(10);
     }
-    return () => {
-      clearInterval(intervalRef.current);
-    };
-  }, [minutes, seconds, status]);
+    return () =>  clearInterval(intervalRef.current);
+  }, [countDown, start, status]);
+
+  const toggleStart=()=>{
+    setStart(!start)
+  }
 
   const timerMinutes = minutes < 10 ? `0${minutes}` : minutes;
   const timerSeconds = seconds < 10 ? `0${seconds}` : seconds;
 
-  const start = () => setStatus(STATUS.start);
   const pause = () => setStatus(STATUS.pause);
   const stop = () => {
     setStatus(STATUS.pause);
@@ -79,13 +84,7 @@ function Timer() {
           {timerMinutes}:{timerSeconds}
         </h2>
       </div>
-
-      <button className="btn" id="btn-start" onClick={start}>
-        Start
-      </button>
-
-      <button className="btn" id="btn-stop" onClick={stop}>
-        Stop
+      <button className="btn" id="btn-start" onClick={toggleStart}>{!start ? "Start Timer" : "Reset Timer"}
       </button>
     </div>
   );
